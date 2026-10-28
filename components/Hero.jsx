@@ -48,9 +48,13 @@ export default function Hero() {
             <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] border border-white/80 bg-stone-200 shadow-2xl shadow-stone-900/10 ring-1 ring-stone-900/5 sm:rounded-[2rem] md:aspect-[3/4] md:max-h-[min(72vh,640px)]">
               <DrivePhoto photo={heroPhoto} className="h-full w-full" />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-charcoal/25 via-transparent to-transparent" />
-            </div>
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/60 bg-white/95 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-gold shadow-lg backdrop-blur-sm sm:bottom-5">
-              Save the Date
+              <button
+                type="button"
+                onClick={() => scrollToSection("itinerary")}
+                className="absolute bottom-2.5 right-2.5 z-10 rounded-full border border-white/70 bg-white/90 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-gold shadow-sm backdrop-blur-sm transition-colors hover:bg-white sm:bottom-3 sm:right-3"
+              >
+                Save the Date
+              </button>
             </div>
           </div>
         </div>

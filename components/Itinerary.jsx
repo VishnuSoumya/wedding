@@ -10,6 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { EVENTS, VENUE } from "@/lib/wedding-data";
+import AddToCalendarButtons from "./AddToCalendarButtons";
 import FadeIn from "./FadeIn";
 import SectionHeading from "./SectionHeading";
 
@@ -87,15 +88,18 @@ export default function Itinerary() {
                       </div>
                     )}
 
-                    <a
-                      href={event.mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sage-200 bg-sage-50 px-4 py-2.5 text-sm font-medium text-sage-800 transition-colors hover:border-sage-300 hover:bg-sage-100 sm:w-auto"
-                    >
-                      <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                      Open in Google Maps
-                    </a>
+                    <div className="space-y-3">
+                      <AddToCalendarButtons event={event} compact />
+                      <a
+                        href={event.mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-sage-200 bg-sage-50 px-4 py-2.5 text-sm font-medium text-sage-800 transition-colors hover:border-sage-300 hover:bg-sage-100 sm:w-auto"
+                      >
+                        <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                        Open in Google Maps
+                      </a>
+                    </div>
                   </div>
                 </article>
               </FadeIn>
