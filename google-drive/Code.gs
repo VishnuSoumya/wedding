@@ -20,6 +20,14 @@ const ROOT_FOLDER_ID = "1MSIkWzFYz_0wSVHLIcdMtbTdzUzRmwhK";
 /** Must match NEXT_PUBLIC_GOOGLE_DRIVE_UPLOAD_TOKEN in .env.local */
 const UPLOAD_TOKEN = "PASTE_A_LONG_RANDOM_SECRET";
 
+/**
+ * Google Sheet for RSVPs — create a sheet, paste its ID from the URL:
+ * https://docs.google.com/spreadsheets/d/THIS_PART/edit
+ * Share the sheet with the Google account that owns this script (Editor).
+ */
+const RSVP_SPREADSHEET_ID = "PASTE_SPREADSHEET_ID";
+const RSVP_SHEET_NAME = "RSVPs";
+
 /** Must match site tab ids: engagement | reception | wedding */
 const CATEGORY_FOLDER_IDS = {
   engagement: "1yasmD_7z4m7MOJQfD9LbIQScwdwyZ8sk",
@@ -35,6 +43,21 @@ function eventParams(e) {
 /** Run from editor (▶) to verify Drive access — not used by the website */
 function testListEngagement() {
   Logger.log(JSON.stringify(listImages("engagement")));
+}
+
+/** Run once (▶) after setting RSVP_SPREADSHEET_ID to authorize Sheets */
+function testAppendRsvp() {
+  Logger.log(
+    JSON.stringify(
+      appendRsvp({
+        name: "Test Guest",
+        contact: "test@example.com",
+        attending: "yes",
+        guestCount: "1",
+        events: ["reception"],
+      })
+    )
+  );
 }
 
 function doGet(e) {
@@ -68,6 +91,9 @@ function doPost(e) {
     }
     if (action === "delete") {
       return finishPost(body, deleteImage(body.fileId));
+    }
+    if (action === "rsvp") {
+      return finishPost(body, appendRsvp(body));
     }
     throw new Error("Unknown action");
   } catch (err) {
@@ -230,6 +256,59 @@ function deleteImage(fileId) {
     throw new Error("File is not in a wedding album folder");
   }
   DriveApp.getFileById(fileId).setTrashed(true);
+  return { ok: true };
+}
+
+function getRsvpSheet() {
+  if (!RSVP_SPREADSHEET_ID || RSVP_SPREADSHEET_ID.indexOf("PASTE") === 0) {
+    throw new Error("Set RSVP_SPREADSHEET_ID in Code.gs");
+  }
+  var ss = SpreadsheetApp.openById(RSVP_SPREADSHEET_ID);
+  var sheet = ss.getSheetByName(RSVP_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(RSVP_SHEET_NAME);
+  }
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      "Timestamp",
+      "Name",
+      "Contact",
+      "Attending",
+      "Guest count",
+      "Events",
+    ]);
+  }
+  return sheet;
+}
+
+function appendRsvp(body) {
+  var name = String(body.name || "").trim();
+  var contact = String(body.contact || "").trim();
+  var attending = String(body.attending || "").trim();
+  if (!name) throw new Error("Missing name");
+  if (!contact) throw new Error("Missing contact");
+  if (attending !== "yes" && attending !== "no") {
+    throw new Error("Invalid attending value");
+  }
+
+  var guestCount = attending === "yes" ? String(body.guestCount || "1") : "";
+  var events = body.events;
+  var eventsText = "";
+  if (Array.isArray(events)) {
+    eventsText = events.join(", ");
+  } else if (events) {
+    eventsText = String(events);
+  }
+
+  getRsvpSheet().appendRow([
+    new Date(),
+    name,
+    contact,
+    attending,
+    guestCount,
+    eventsText,
+  ]);
+
   return { ok: true };
 }
 

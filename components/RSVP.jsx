@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Send } from "lucide-react";
+import { Heart, Loader2, Send } from "lucide-react";
 import { EVENTS, WEDDING } from "@/lib/wedding-data";
+import { submitRsvp } from "@/lib/google-drive";
 import FadeIn from "./FadeIn";
 import SectionHeading from "./SectionHeading";
 import { TerminalRSVPFooter } from "./TerminalRSVP";
@@ -18,6 +19,8 @@ const initialForm = {
 export default function RSVP() {
   const [form, setForm] = useState(initialForm);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [errors, setErrors] = useState({});
 
   const toggleEvent = (eventId) => {
@@ -41,15 +44,34 @@ export default function RSVP() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    setSubmitted(true);
+
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await submitRsvp({
+        name: form.name,
+        contact: form.contact,
+        attending: form.attending,
+        guestCount: form.guestCount,
+        events: form.events,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Could not submit RSVP — try again.";
+      setSubmitError(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const resetForm = () => {
     setForm(initialForm);
     setSubmitted(false);
+    setSubmitError(null);
     setErrors({});
   };
 
@@ -212,12 +234,26 @@ export default function RSVP() {
               )}
             </div>
 
+            {submitError && (
+              <p
+                className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+                role="alert"
+              >
+                {submitError}
+              </p>
+            )}
+
             <button
               type="submit"
-              className="mt-8 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg border border-charcoal/10 bg-charcoal px-6 py-3.5 font-mono text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-charcoal/90 hover:shadow-xl active:scale-[0.98]"
+              disabled={submitting}
+              className="mt-8 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg border border-charcoal/10 bg-charcoal px-6 py-3.5 font-mono text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-charcoal/90 hover:shadow-xl active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
             >
-              <Send className="h-4 w-4" aria-hidden="true" />
-              $ ./submit-rsvp.sh
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Send className="h-4 w-4" aria-hidden="true" />
+              )}
+              {submitting ? "Submitting…" : "$ ./submit-rsvp.sh"}
             </button>
           </form>
         </FadeIn>

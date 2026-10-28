@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Cloud,
@@ -58,6 +59,7 @@ export default function PhotoDump() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
@@ -108,6 +110,10 @@ export default function PhotoDump() {
   useEffect(() => {
     loadCategory(activeTab);
   }, [activeTab, loadCategory]);
+
+  useEffect(() => {
+    if (uploading) setUploadOpen(true);
+  }, [uploading]);
 
   useEffect(() => () => revokeLocalUrls(), [revokeLocalUrls]);
 
@@ -338,56 +344,97 @@ export default function PhotoDump() {
           </p>
         )}
 
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop}
-          className={cn(
-            "relative mb-10 rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-colors",
-            dragOver
-              ? "border-gold bg-gold/5"
-              : "border-stone-200 bg-sand/50 hover:border-gold/30"
-          )}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,.heic,.heif"
-            multiple
-            className="sr-only"
-            onChange={(e) => processFiles(e.target.files)}
-          />
-          <ImagePlus
-            className="mx-auto h-10 w-10 text-gold"
-            aria-hidden="true"
-          />
-          <p className="mt-3 font-serif text-xl text-charcoal">
-            Drag photos here
-          </p>
-          <p className="mt-1 text-sm text-stone-500">
-            or choose files — JPG, PNG, HEIC (max 12 MB each)
-          </p>
+        <div className="mb-10 overflow-hidden rounded-2xl border border-stone-200 bg-sand/50">
           <button
             type="button"
-            disabled={uploading}
-            onClick={() => fileInputRef.current?.click()}
-            className="mt-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-[#0d1117] transition-colors hover:bg-gold-dark disabled:opacity-60"
+            onClick={() => setUploadOpen((open) => !open)}
+            aria-expanded={uploadOpen}
+            aria-controls="photo-upload-panel"
+            id="photo-upload-trigger"
+            className="flex w-full min-h-[52px] items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-sand/80"
           >
-            {uploading ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Upload className="h-4 w-4" aria-hidden="true" />
-            )}
-            {uploading ? "Uploading…" : "Select photos"}
+            <span className="flex min-w-0 items-center gap-3">
+              {uploading ? (
+                <Loader2
+                  className="h-5 w-5 shrink-0 animate-spin text-gold"
+                  aria-hidden="true"
+                />
+              ) : (
+                <ImagePlus
+                  className="h-5 w-5 shrink-0 text-gold"
+                  aria-hidden="true"
+                />
+              )}
+              <span className="min-w-0">
+                <span className="block font-serif text-lg text-charcoal">
+                  {uploading ? "Uploading photos…" : "Add photos"}
+                </span>
+                <span className="mt-0.5 block truncate font-mono text-xs text-stone-400">
+                  {driveEnabled
+                    ? `Drive / ${activeCategory?.label || activeTab}`
+                    : `local only · public/photos/${activeTab}/`}
+                </span>
+              </span>
+            </span>
+            <ChevronDown
+              className={cn(
+                "h-5 w-5 shrink-0 text-stone-500 transition-transform duration-200",
+                uploadOpen && "rotate-180"
+              )}
+              aria-hidden="true"
+            />
           </button>
-          <p className="mt-4 font-mono text-xs text-stone-400">
-            {driveEnabled
-              ? `Drive / ${activeCategory?.label || activeTab}`
-              : `local only · public/photos/${activeTab}/`}
-          </p>
+
+          {uploadOpen && (
+          <div
+            id="photo-upload-panel"
+            role="region"
+            aria-labelledby="photo-upload-trigger"
+          >
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={onDrop}
+              className={cn(
+                "relative border-t border-stone-200/80 px-6 py-8 text-center transition-colors",
+                dragOver
+                  ? "border-gold/40 bg-gold/5"
+                  : "bg-white/40"
+              )}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,.heic,.heif"
+                multiple
+                className="sr-only"
+                onChange={(e) => processFiles(e.target.files)}
+              />
+              <p className="font-serif text-lg text-charcoal">
+                Drag photos here
+              </p>
+              <p className="mt-1 text-sm text-stone-500">
+                or choose files — JPG, PNG, HEIC (max 12 MB each)
+              </p>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="mt-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-[#0d1117] transition-colors hover:bg-gold-dark disabled:opacity-60"
+              >
+                {uploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Upload className="h-4 w-4" aria-hidden="true" />
+                )}
+                {uploading ? "Uploading…" : "Select photos"}
+              </button>
+            </div>
+          </div>
+          )}
         </div>
 
         {error && (
