@@ -1,34 +1,22 @@
 "use client";
 
+import { useState } from "react";
 import { ChevronDown, MapPin } from "lucide-react";
-import DrivePhoto from "@/components/DrivePhoto";
+import HeroSlideshow from "@/components/HeroSlideshow";
+import { HERO_PHOTOS } from "@/lib/hero-photos";
 import { WEDDING } from "@/lib/wedding-data";
 import { scrollToSection } from "@/lib/utils";
 
-const HERO_DRIVE_ID = "1N2kpfKT9iFduudJFdcjVo_I8Qk5YUE5S";
-
-const heroPhoto = {
-  kind: "drive",
-  id: HERO_DRIVE_ID,
-  src: `https://lh3.googleusercontent.com/d/${HERO_DRIVE_ID}=w1200-rw`,
-  fullSrc: `https://drive.google.com/uc?export=view&id=${HERO_DRIVE_ID}`,
-  srcFallbacks: [
-    `https://lh3.googleusercontent.com/d/${HERO_DRIVE_ID}=w1200-rw`,
-    `https://drive.google.com/uc?export=view&id=${HERO_DRIVE_ID}`,
-    `https://drive.google.com/thumbnail?id=${HERO_DRIVE_ID}&sz=w1200`,
-  ],
-  alt: ` ${WEDDING.bride} & ${WEDDING.groom} `,
-  name: "hero",
-};
-
 export default function Hero() {
+  const [backdropSrc, setBackdropSrc] = useState(HERO_PHOTOS[0]?.src);
+
   return (
     <section className="relative flex min-h-[100dvh] flex-col justify-center overflow-hidden px-4 pb-20 pt-16 sm:px-6 sm:pt-20 md:pb-16">
       {/* Ambient backdrop from the couple photo */}
       <div className="absolute inset-0" aria-hidden="true">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={heroPhoto.src}
+          src={backdropSrc}
           alt=""
           className="absolute inset-0 h-full w-full scale-105 object-cover opacity-[0.35] blur-2xl saturate-[1.15]"
           referrerPolicy="no-referrer"
@@ -40,22 +28,26 @@ export default function Hero() {
       <div className="relative z-10 mx-auto grid w-full max-w-6xl items-center gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] md:gap-12 lg:gap-16">
         {/* Featured photo */}
         <div className="order-1 mx-auto w-full max-w-md md:order-none md:mx-0 md:max-w-none">
-          <div className="relative">
+          <div className="relative pb-6 sm:pb-8">
             <div
-              className="absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-gold/25 via-sage-100/40 to-gold/10 opacity-80 blur-sm sm:-inset-4 sm:rounded-[2.25rem]"
+              className="pointer-events-none absolute inset-0 flex items-center justify-center pb-5 sm:pb-6"
               aria-hidden="true"
-            />
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] border border-white/80 bg-stone-200 shadow-2xl shadow-stone-900/10 ring-1 ring-stone-900/5 sm:rounded-[2rem] md:aspect-[3/4] md:max-h-[min(72vh,640px)]">
-              <DrivePhoto photo={heroPhoto} className="h-full w-full" />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-charcoal/25 via-transparent to-transparent" />
-              <button
-                type="button"
-                onClick={() => scrollToSection("itinerary")}
-                className="absolute bottom-2.5 right-2.5 z-10 rounded-full border border-white/70 bg-white/90 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-gold shadow-sm backdrop-blur-sm transition-colors hover:bg-white sm:bottom-3 sm:right-3"
-              >
-                Save the Date
-              </button>
+            >
+              <div className="aspect-[4/5] w-[82%] max-w-[340px] rounded-[1.75rem] bg-gradient-to-br from-gold/30 via-sage-100/35 to-gold/15 opacity-90 blur-2xl md:aspect-[3/4]" />
             </div>
+            <HeroSlideshow
+              photos={HERO_PHOTOS}
+              onActivePhoto={(photo) => {
+                if (photo?.src) setBackdropSrc(photo.src);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => scrollToSection("itinerary")}
+              className="absolute bottom-8 right-[12%] z-40 rounded-full border border-white/70 bg-white/90 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-gold shadow-sm backdrop-blur-sm transition-colors hover:bg-white sm:bottom-10 sm:right-[14%]"
+            >
+              Save the Date
+            </button>
           </div>
         </div>
 

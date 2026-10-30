@@ -1,35 +1,52 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
-import { GALLERY } from "@/lib/wedding-data";
 import { loadRandomGalleryFromDrive } from "@/lib/gallery-from-drive";
 import DrivePhoto from "./DrivePhoto";
 import FadeIn from "./FadeIn";
 import SectionHeading from "./SectionHeading";
 
-function staticGalleryItems() {
-  return GALLERY.map((photo, index) => ({
-    kind: "static",
-    key: `static-${index}`,
-    src: photo.src,
-    fullSrc: photo.src.replace("w=800", "w=1200"),
-    alt: photo.alt,
-  }));
+const GALLERY_SLOT_COUNT = 6;
+
+function galleryCellClass(index) {
+  return index === 0
+    ? "col-span-2 row-span-2 aspect-[4/3] md:col-span-1 md:row-span-1 md:aspect-square"
+    : "aspect-square";
+}
+
+function GallerySkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 md:gap-4">
+      {Array.from({ length: GALLERY_SLOT_COUNT }, (_, index) => (
+        <div
+          key={`gallery-skeleton-${index}`}
+          className={`overflow-hidden rounded-xl bg-stone-200/80 ${galleryCellClass(index)}`}
+          aria-hidden="true"
+        >
+          <div className="h-full w-full animate-pulse bg-gradient-to-br from-stone-200 via-stone-100 to-stone-200" />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function Gallery() {
-  const fallbackPhotos = useMemo(() => staticGalleryItems(), []);
-  const [photos, setPhotos] = useState(fallbackPhotos);
+  const [photos, setPhotos] = useState([]);
+  const [loadState, setLoadState] = useState("loading");
   const [lightboxIndex, setLightboxIndex] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const fromDrive = await loadRandomGalleryFromDrive(6);
-      if (!cancelled && fromDrive?.length) {
+      const fromDrive = await loadRandomGalleryFromDrive(GALLERY_SLOT_COUNT);
+      if (cancelled) return;
+      if (fromDrive?.length) {
         setPhotos(fromDrive);
+        setLoadState("ready");
+      } else {
+        setLoadState("empty");
       }
     })();
     return () => {
@@ -97,40 +114,41 @@ export default function Gallery() {
           </Link>
         </p>
 
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 md:gap-4">
-          {photos.map((photo, index) => (
-            <FadeIn key={photo.key} delay={index * 60}>
-              <button
-                type="button"
-                onClick={() => openLightbox(index)}
-                className={`group relative overflow-hidden rounded-xl bg-stone-200 ${
-                  index === 0
-                    ? "col-span-2 row-span-2 aspect-[4/3] md:col-span-1 md:row-span-1 md:aspect-square"
-                    : "aspect-square"
-                }`}
-                aria-label={`View ${photo.alt}`}
-              >
-                {photo.kind === "drive" ? (
-                  <DrivePhoto photo={photo} sizes="grid" />
-                ) : (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={photo.src}
-                    alt={photo.alt}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                )}
-                <div className="absolute inset-0 flex items-center justify-center bg-charcoal/0 transition-colors duration-300 group-hover:bg-charcoal/30">
-                  <ZoomIn
-                    className="h-8 w-8 scale-75 text-white opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100"
-                    aria-hidden="true"
-                  />
-                </div>
-              </button>
-            </FadeIn>
-          ))}
-        </div>
+        {loadState === "loading" && <GallerySkeleton />}
+
+        {loadState === "empty" && (
+          <p className="rounded-xl border border-stone-200/80 bg-stone-50 px-6 py-10 text-center text-sm text-stone-500">
+            Gallery photos are loading from our albums — check back shortly or
+            visit the{" "}
+            <Link href="/photos/" className="font-medium text-gold hover:underline">
+              photo dump
+            </Link>
+            .
+          </p>
+        )}
+
+        {loadState === "ready" && (
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 md:gap-4">
+            {photos.map((photo, index) => (
+              <FadeIn key={photo.key} delay={index * 60}>
+                <button
+                  type="button"
+                  onClick={() => openLightbox(index)}
+                  className={`group relative overflow-hidden rounded-xl bg-stone-200 ${galleryCellClass(index)}`}
+                  aria-label={`View ${photo.alt}`}
+                >
+                  <DrivePhoto photo={photo} sizes="grid" skeleton />
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-charcoal/0 transition-colors duration-300 group-hover:bg-charcoal/30">
+                    <ZoomIn
+                      className="h-8 w-8 scale-75 text-white opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100"
+                      aria-hidden="true"
+                    />
+                  </div>
+                </button>
+              </FadeIn>
+            ))}
+          </div>
+        )}
       </div>
 
       {lightboxIndex !== null && photos[lightboxIndex] && (
@@ -158,16 +176,11 @@ export default function Gallery() {
             <ChevronLeft className="h-6 w-6" />
           </button>
 
-          {photos[lightboxIndex].kind === "drive" ? (
-            <DrivePhoto photo={photos[lightboxIndex]} sizes="lightbox" />
-          ) : (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={photos[lightboxIndex].fullSrc || photos[lightboxIndex].src}
-              alt={photos[lightboxIndex].alt}
-              className="max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl"
-            />
-          )}
+          <DrivePhoto
+            photo={photos[lightboxIndex]}
+            sizes="lightbox"
+            skeleton
+          />
 
           <button
             type="button"

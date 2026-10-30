@@ -1,9 +1,16 @@
 import { Car, Mail, Phone, Plane, Train } from "lucide-react";
-import { TRAVEL, WEDDING } from "@/lib/wedding-data";
+import {
+  TRAVEL,
+  WEDDING,
+  contactPhones,
+  phoneTelHref,
+} from "@/lib/wedding-data";
 import FadeIn from "./FadeIn";
 import SectionHeading from "./SectionHeading";
 
 export default function TravelInfo() {
+  const phones = contactPhones(WEDDING.contact.phone);
+
   return (
     <section id="travel" className="scroll-mt-4 bg-sand px-5 py-16 md:py-24">
       <div className="mx-auto max-w-4xl">
@@ -67,16 +74,19 @@ export default function TravelInfo() {
             </h3>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-stone-600">
               For any questions about the venue, travel, or the celebrations, reach
-              out to {WEDDING.contact.name}.
+              out to the Jagalur Family.
             </p>
-            <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-6">
-              <a
-                href={`tel:${WEDDING.contact.phone.replace(/\s/g, "")}`}
-                className="inline-flex items-center gap-2 text-sm font-medium text-charcoal transition-colors hover:text-gold"
-              >
-                <Phone className="h-4 w-4 text-gold" aria-hidden="true" />
-                {WEDDING.contact.phone}
-              </a>
+            <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-3">
+              {phones.map((phone) => (
+                <a
+                  key={phone}
+                  href={phoneTelHref(phone)}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-charcoal transition-colors hover:text-gold"
+                >
+                  <Phone className="h-4 w-4 text-gold" aria-hidden="true" />
+                  {phone}
+                </a>
+              ))}
               <a
                 href={`mailto:${WEDDING.contact.email}`}
                 className="inline-flex items-center gap-2 text-sm font-medium text-charcoal transition-colors hover:text-gold"

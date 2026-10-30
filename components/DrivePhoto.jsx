@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ExternalLink, ImageOff } from "lucide-react";
 
 function isHeicLike(name, mimeType) {
@@ -18,6 +18,7 @@ export default function DrivePhoto({
   photo,
   className = "",
   sizes = "grid",
+  skeleton = false,
 }) {
   const fallbacks = useMemo(() => {
     const list = photo.srcFallbacks || [photo.src, photo.fullSrc];
@@ -25,7 +26,12 @@ export default function DrivePhoto({
   }, [photo]);
 
   const [index, setIndex] = useState(0);
+  const [loaded, setLoaded] = useState(false);
   const src = fallbacks[index];
+
+  useEffect(() => {
+    setLoaded(false);
+  }, [src]);
   const heic = photo.kind === "drive" && isHeicLike(photo.name, photo.mimeType);
   const driveView =
     photo.kind === "drive" && photo.id
@@ -83,20 +89,42 @@ export default function DrivePhoto({
       ? "max-h-[85vh] max-w-full rounded-lg object-contain shadow-2xl"
       : "h-full w-full object-cover transition-transform duration-500 group-hover:scale-105";
 
+  const showSkeleton = skeleton && !loaded;
+
   return (
-    /* eslint-disable-next-line @next/next/no-img-element */
-    <img
-      src={src}
-      alt={photo.alt}
-      loading="lazy"
-      decoding="async"
-      referrerPolicy="no-referrer"
-      className={`${imgClass} ${className}`}
-      onError={() => {
-        setIndex((prev) =>
-          prev + 1 < fallbacks.length ? prev + 1 : fallbacks.length
-        );
-      }}
-    />
+    <div
+      className={
+        sizes === "lightbox"
+          ? `relative inline-flex max-h-[85vh] max-w-full ${className}`
+          : `relative h-full w-full ${className}`
+      }
+    >
+      {showSkeleton && (
+        <div
+          className={`absolute inset-0 animate-pulse bg-gradient-to-br from-stone-200 via-stone-100 to-stone-200 ${
+            sizes === "lightbox" ? "min-h-[40vh] min-w-[min(100%,280px)] rounded-lg" : ""
+          }`}
+          aria-hidden="true"
+        />
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={photo.alt}
+        loading="lazy"
+        decoding="async"
+        referrerPolicy="no-referrer"
+        className={`${imgClass} transition-opacity duration-300 ${
+          showSkeleton ? "opacity-0" : "opacity-100"
+        } ${sizes === "lightbox" ? "" : "relative z-[1]"}`}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setLoaded(false);
+          setIndex((prev) =>
+            prev + 1 < fallbacks.length ? prev + 1 : fallbacks.length
+          );
+        }}
+      />
+    </div>
   );
 }

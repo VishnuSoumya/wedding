@@ -1,4 +1,5 @@
 import { Inter, JetBrains_Mono, Playfair_Display } from "next/font/google";
+import SiteExperience from "@/components/SiteExperience";
 import { WEDDING } from "@/lib/wedding-data";
 import "./globals.css";
 
@@ -73,7 +74,10 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${inter.variable} ${playfair.variable} ${jetbrainsMono.variable} h-full`}
     >
-      <body className="min-h-full antialiased">{children}</body>
+      <body className="min-h-full antialiased">
+        {children}
+        <SiteExperience />
+      </body>
     </html>
   );
 }
