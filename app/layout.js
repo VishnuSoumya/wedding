@@ -48,7 +48,7 @@ export const metadata = {
       {
         url: WEDDING.ogImage,
         width: 1200,
-        height: 630,
+        height: 800,
         alt: `${WEDDING.coupleDisplay} Wedding Invitation`,
       },
     ],
