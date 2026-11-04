@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
 import { loadRandomGalleryFromDrive } from "@/lib/gallery-from-drive";
 import DrivePhoto from "./DrivePhoto";
@@ -105,25 +104,11 @@ export default function Gallery() {
           subtitle="A glimpse of our journey together — tap any photo to view full size."
         />
 
-        <p className="-mt-4 mb-8 text-center">
-          <Link
-            href="/photos/"
-            className="text-sm font-medium text-gold underline-offset-4 transition-colors hover:text-gold-dark hover:underline"
-          >
-            Share or browse engagement, reception & wedding photos →
-          </Link>
-        </p>
-
         {loadState === "loading" && <GallerySkeleton />}
 
         {loadState === "empty" && (
           <p className="rounded-xl border border-stone-200/80 bg-stone-50 px-6 py-10 text-center text-sm text-stone-500">
-            Gallery photos are loading from our albums — check back shortly or
-            visit the{" "}
-            <Link href="/photos/" className="font-medium text-gold hover:underline">
-              photo dump
-            </Link>
-            .
+            Gallery photos are loading from our albums — check back shortly.
           </p>
         )}
 
